@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -131,7 +131,6 @@
             display: none;
         }
 
-        /* Modal para Botões Laranja e Amarelo */
         .modal {
             display: none;
             position: fixed;
@@ -140,6 +139,7 @@
             justify-content: center;
             align-items: center;
             padding: 20px;
+            z-index: 10;
         }
 
         .modal-content {
@@ -187,12 +187,12 @@
 
     <div class="container">
         <h1>Socorro Excellington</h1>
-        <div class="subtitle">Sistema de Alerta e Geolocalização de Emergência</div>
+        <div class="subtitle">Sistema de Alerta SMS e Geolocalização</div>
 
         <div class="section">
-            <label for="contactsInput">Contatos WhatsApp (números com DDI e DDD, separados por vírgula):</label>
-            <input type="text" id="contactsInput" placeholder="Ex: 5531999999999, 5531888888888">
-            <button class="btn-config" onclick="saveContacts()">Salvar Configurações</button>
+            <label for="smsInput">Número de SMS de Emergência (com DDI e DDD):</label>
+            <input type="text" id="smsInput" placeholder="Ex: 5531999999999">
+            <button class="btn-config" onclick="saveConfig()">Salvar Configuração</button>
         </div>
 
         <hr style="border: 0; border-top: 1px solid #333; margin: 15px 0;">
@@ -209,53 +209,46 @@
     <div id="customModal" class="modal">
         <div class="modal-content">
             <h3 id="modalTitle">Informações Adicionais</h3>
-            <p style="font-size: 0.8rem; color: #aaa; margin-bottom: 10px;">Descreva o ocorrido ou grave um áudio opcional.</p>
-            <textarea id="additionalInfo" rows="4" placeholder="Ex: Meu carro quebrou na rodovia X, preciso de guincho..."></textarea>
+            <p style="font-size: 0.8rem; color: #aaa; margin-bottom: 10px;">Descreva o ocorrido ou dite por voz (respeitando o limite de SMS).</p>
+            <textarea id="additionalInfo" rows="4" placeholder="Ex: Meu carro quebrou na rodovia..."></textarea>
             
-            <button class="btn-config" id="recordAudioBtn" onclick="toggleAudioRecordModal()" style="margin-bottom: 10px;">🎙️ Gravar Áudio (Opcional)</button>
-            <span id="audioStatus" style="font-size: 0.8rem; display:block; margin-bottom: 10px;">Nenhum áudio gravado.</span>
+            <button class="btn-config" id="recordVoiceBtn" onclick="toggleVoiceTranscription()" style="margin-bottom: 10px;">🎙️ Ditar por Voz (Transcrição)</button>
+            <span id="voiceStatus" style="font-size: 0.8rem; display:block; margin-bottom: 10px;">Aguardando comando de voz.</span>
 
             <div class="modal-buttons">
                 <button class="btn-action btn-cancel" onclick="closeModal()">Cancelar</button>
-                <button class="btn-action btn-send" onclick="sendCustomAlert()">Enviar Alerta</button>
+                <button class="btn-action btn-send" onclick="sendCustomAlert()">Enviar SMS</button>
             </div>
         </div>
     </div>
 
     <script>
+        const SMS_LIMIT = 160;
         let currentMode = '';
-        let mediaRecorder;
-        let audioChunks = [];
-        let recordedBlob = null;
         let redAlertInterval = null;
+        let recognition = null;
 
-        // Carregar contatos salvos ao iniciar
         window.onload = function() {
-            const saved = localStorage.getItem('excellington_contacts');
-            if (saved) {
-                document.getElementById('contactsInput').value = saved;
+            const savedSMS = localStorage.getItem('excellington_sms');
+            if (savedSMS) {
+                document.getElementById('smsInput').value = savedSMS;
             }
             requestPermissionsEarly();
         };
 
-        function saveContacts() {
-            const contacts = document.getElementById('contactsInput').value.trim();
-            localStorage.setItem('excellington_contacts', contacts);
-            showStatus("Contatos salvos com sucesso!", "green");
+        function saveConfig() {
+            const smsNumber = document.getElementById('smsInput').value.trim();
+            localStorage.setItem('excellington_sms', smsNumber);
+            showStatus("Número de SMS salvo com sucesso!", "green");
         }
 
-        // Solicita permissões de Geolocalização e Microfone preventivamente
         async function requestPermissionsEarly() {
             try {
                 if (navigator.geolocation) {
                     navigator.geolocation.getCurrentPosition(() => {}, () => {}, {maximumAge: 60000, timeout: 5000});
                 }
-                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    stream.getTracks().forEach(track => track.stop());
-                }
             } catch (e) {
-                console.log("Permissões prévias pendentes ou negadas.");
+                console.log("Permissão prévia de geolocalização pendente.");
             }
         }
 
@@ -266,38 +259,69 @@
             box.innerHTML = text;
         }
 
+        function removerAcentos(texto) {
+            return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        }
+
+        function criarMensagemSMS(tipo, localizacao, textoVoz = '') {
+            let base = '';
+            const locFormatada = removerAcentos(localizacao);
+            const vozFormatada = removerAcentos(textoVoz);
+
+            switch (tipo) {
+                case 'perigo':
+                    base = `SOCORRO! Perigo iminente. Local: ${locFormatada}. Ajuda urgente!`;
+                    break;
+                case 'acidente':
+                    base = `ACIDENTE! ${vozFormatada}. Local: ${locFormatada}`;
+                    break;
+                case 'pane':
+                    base = `PANE! Veiculo imobilizado. ${vozFormatada}. Local: ${locFormatada}`;
+                    break;
+                default:
+                    base = `Alerta Socorro Excellington. Local: ${locFormatada}`;
+            }
+
+            if (base.length > SMS_LIMIT) {
+                const excesso = base.length - SMS_LIMIT;
+                const tamanhoDisponivelVoz = vozFormatada.length - excesso;
+                
+                if (tamanhoDisponivelVoz > 0) {
+                    const vozReduzida = vozFormatada.substring(0, tamanhoDisponivelVoz - 3) + '...';
+                    return criarMensagemSMS(tipo, localizacao, vozReduzida);
+                } else {
+                    base = base.substring(0, SMS_LIMIT - 3) + '...';
+                }
+            }
+
+            return base;
+        }
+
         // --- BOTÃO VERMELHO (PERIGO IMINENTE) ---
         function triggerRedAlert() {
-            const contacts = getContactsList();
-            if (contacts.length === 0) {
-                alert("Configure pelo menos um contato do WhatsApp antes de usar.");
+            const smsNumber = localStorage.getItem('excellington_sms');
+            if (!smsNumber) {
+                alert("Configure o número de SMS de emergência antes de usar.");
                 return;
             }
 
-            if (!confirm("ATENÇÃO: Você acionará o alerta máximo de PERIGO. Deseja prosseguir?")) return;
+            if (!confirm("ATENÇÃO: Você acionará o alerta máximo de PERIGO via SMS. Deseja prosseguir?")) return;
 
-            showStatus("🚨 ALERTA DE PERIGO ATIVADO! Obtendo localização e gravando áudio...", "#d32f2f");
+            showStatus("🚨 ALERTA DE PERIGO ATIVADO! Obtendo localização...", "#d32f2f");
             
-            // Executa o primeiro ciclo imediatamente
-            executeRedAlertCycle(contacts);
+            executeRedAlertCycle(smsNumber);
 
-            // Agenda repetição a cada 5 minutos (300000 ms)
             if (redAlertInterval) clearInterval(redAlertInterval);
             redAlertInterval = setInterval(() => {
-                executeRedAlertCycle(contacts);
-            }, 300000);
+                executeRedAlertCycle(smsNumber);
+            }, 300000); // A cada 5 minutos
         }
 
-        async function executeRedAlertCycle(contacts) {
+        async function executeRedAlertCycle(smsNumber) {
             try {
-                const location = await getLocation();
-                showStatus(`🔴 Gravando áudio ambiente (1 min) <span class="recording-indicator">● REC</span>`, "#d32f2f");
-                
-                const audioBlob = await recordAudio(60000); // 1 minuto de gravação
-                
-                // Envio para os contatos via WhatsApp API links
-                sendWhatsAppAlerts(contacts, "PERIGO IMINENTE! Preciso de ajuda urgente.", location);
-                showStatus(`✅ Alerta enviado com sucesso. Próxima varredura em 5 minutos.`, "#388e3c");
+                const locationUrl = await getLocation();
+                sendSMS(smsNumber, 'perigo', locationUrl, '');
+                showStatus(`✅ SMS de perigo disparado. Próximo ciclo em 5 minutos.`, "#388e3c");
             } catch (error) {
                 showStatus(`❌ Erro no ciclo de perigo: ${error.message}`, "#d32f2f");
             }
@@ -305,154 +329,128 @@
 
         // --- BOTÕES LARANJA E AMARELO ---
         function openModal(mode) {
-            const contacts = getContactsList();
-            if (contacts.length === 0) {
-                alert("Configure pelo menos um contato do WhatsApp antes de usar.");
+            const smsNumber = localStorage.getItem('excellington_sms');
+            if (!smsNumber) {
+                alert("Configure o número de SMS de emergência antes de usar.");
                 return;
             }
             currentMode = mode;
             document.getElementById('modalTitle').innerText = mode === 'orange' ? "🟠 Alerta de Acidente" : "🟡 Alerta de Pane / Ataque";
             document.getElementById('additionalInfo').value = '';
-            recordedBlob = null;
-            document.getElementById('audioStatus').innerText = "Nenhum áudio gravado.";
+            document.getElementById('voiceStatus').innerText = "Aguardando comando de voz.";
             document.getElementById('customModal').style.display = "flex";
         }
 
         function closeModal() {
+            if (recognition) {
+                recognition.stop();
+            }
             document.getElementById('customModal').style.display = 'none';
         }
 
-        let isRecordingModal = false;
-        async function toggleAudioRecordModal() {
-            const btn = document.getElementById('recordAudioBtn');
-            const status = document.getElementById('audioStatus');
+        function toggleVoiceTranscription() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                alert("Seu navegador não suporta reconhecimento de voz.");
+                return;
+            }
 
-            if (!isRecordingModal) {
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    mediaRecorder = new MediaRecorder(stream);
-                    audioChunks = [];
+            const status = document.getElementById('voiceStatus');
+            const btn = document.getElementById('recordVoiceBtn');
+            const textArea = document.getElementById('additionalInfo');
 
-                    mediaRecorder.ondataavailable = event => audioChunks.push(event.data);
-                    mediaRecorder.onstop = () => {
-                        recordedBlob = new Blob(audioChunks, { type: 'audio/mp3' });
-                        status.innerText = "Áudio gravado com sucesso! Pronto para envio.";
-                        btn.style.background = "#444";
-                        btn.innerText = "🎙️ Gravar Áudio (Opcional)";
-                    };
+            if (!recognition) {
+                recognition = new SpeechRecognition();
+                recognition.lang = 'pt-BR';
+                recognition.interimResults = false;
+                recognition.maxAlternatives = 1;
 
-                    mediaRecorder.start();
-                    isRecordingModal = true;
+                recognition.onstart = () => {
+                    status.innerHTML = `Ouvindo... <span class="recording-indicator">● REC</span>`;
                     btn.style.background = "#d32f2f";
-                    btn.innerText = "⏹️ Parar Gravação";
-                    status.innerHTML = `Gravando... <span class="recording-indicator">● REC</span>`;
-                } catch (err) {
-                    alert("Erro ao acessar microfone: " + err.message);
-                }
+                    btn.innerText = "⏹️ Parar Escuta";
+                };
+
+                recognition.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    textArea.value = transcript;
+                    status.innerText = "Transcrição concluída com sucesso!";
+                    btn.style.background = "#444";
+                    btn.innerText = "🎙️ Ditar por Voz (Transcrição)";
+                    recognition = null;
+                };
+
+                recognition.onerror = (event) => {
+                    status.innerText = "Erro na captura de voz. Tente digitar.";
+                    btn.style.background = "#444";
+                    btn.innerText = "🎙️ Ditar por Voz (Transcrição)";
+                    recognition = null;
+                };
+
+                recognition.onend = () => {
+                    btn.style.background = "#444";
+                    btn.innerText = "🎙️ Ditar por Voz (Transcrição)";
+                    recognition = null;
+                };
+
+                recognition.start();
             } else {
-                mediaRecorder.stop();
-                mediaRecorder.stream.getTracks().forEach(track => track.stop());
-                isRecordingModal = false;
+                recognition.stop();
+                recognition = null;
             }
         }
 
         async function sendCustomAlert() {
             closeModal();
-            const contacts = getContactsList();
+            const smsNumber = localStorage.getItem('excellington_sms');
             const info = document.getElementById('additionalInfo').value.trim();
-            const prefix = currentMode === 'orange' ? "ACIDENTE" : "PANE / ATAQUE";
-            const message = `${prefix}: ${info ? info : 'Sem informações adicionais.'}`;
 
-            showStatus("Obtendo localização e enviando alerta...", "#f57c00");
+            showStatus("Obtendo localização e preparando SMS...", "#f57c00");
 
             try {
-                const location = await getLocation();
-                sendWhatsAppAlerts(contacts, message, location);
-                showStatus(`✅ Alerta de ${prefix.toLowerCase()} enviado com sucesso!`, "#388e3c");
+                const locationUrl = await getLocation();
+                sendSMS(smsNumber, currentMode, locationUrl, info);
+                showStatus(`✅ Alerta de ${currentMode} enviado com sucesso via SMS!`, "#388e3c");
             } catch (error) {
-                showStatus(`❌ Erro ao enviar alerta: ${error.message}`, "#d32f2f");
+                showStatus(`❌ Erro ao enviar SMS: ${error.message}`, "#d32f2f");
             }
         }
 
-        // --- UTILITÁRIOS DE SISTEMA ---
-        function getContactsList() {
-            const raw = document.getElementById('contactsInput').value;
-            return raw.split(',').map(n => n.trim()).filter(n => n.length > 0);
+        function sendSMS(number, type, locationUrl, voiceText) {
+            const finalMessage = criarMensagemSMS(type, locationUrl, voiceText);
+            const separator = /iPad|iPhone|iPod/.test(navigator.userAgent) ? '&' : '?';
+            const url = `sms:${number}${separator}body=${encodeURIComponent(finalMessage)}`;
+            window.location.href = url;
         }
 
         function getLocation() {
-    return new Promise((resolve, reject) => {
-        if (!navigator.geolocation) {
-            reject(new Error("Geolocalização não suportada pelo navegador."));
-            return;
-        }
+            return new Promise((resolve, reject) => {
+                if (!navigator.geolocation) {
+                    reject(new Error("Geolocalização não suportada pelo navegador."));
+                    return;
+                }
 
-        // Primeira tentativa: Alta precisão com 15 segundos de timeout
-        navigator.geolocation.getCurrentPosition(
-            position => {
-                const lat = position.coords.latitude;
-                const lon = position.coords.longitude;
-                resolve(`https://maps.google.com/?q=${lat},${lon}`);
-            },
-            error => {
-                // Segunda tentativa (Fallback): Precisão padrão (rede/Wi-Fi), ideal para dentro de imóveis
                 navigator.geolocation.getCurrentPosition(
                     position => {
                         const lat = position.coords.latitude;
                         const lon = position.coords.longitude;
                         resolve(`https://maps.google.com/?q=${lat},${lon}`);
                     },
-                    err2 => {
-                        reject(new Error("Não foi possível obter a localização. Verifique se o navegador tem permissão de GPS e se a página está em HTTPS."));
+                    () => {
+                        navigator.geolocation.getCurrentPosition(
+                            position => {
+                                const lat = position.coords.latitude;
+                                const lon = position.coords.longitude;
+                                resolve(`https://maps.google.com/?q=${lat},${lon}`);
+                            },
+                            () => reject(new Error("Não foi possível obter a localização. Verifique o GPS.")),
+                            { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
+                        );
                     },
-                    { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
+                    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
                 );
-            },
-            { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-        );
-    });
-}
-
-
-
-        function recordAudio(durationMs) {
-            return new Promise(async (resolve, reject) => {
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    const recorder = new MediaRecorder(stream);
-                    let chunks = [];
-
-                    recorder.ondataavailable = e => chunks.push(e.data);
-                    recorder.onstop = () => {
-                        const blob = new Blob(chunks, { type: 'audio/webm' });
-                        stream.getTracks().forEach(track => track.stop());
-                        resolve(blob);
-                    };
-
-                    recorder.start();
-                    setTimeout(() => {
-                        if (recorder.state === "recording") {
-                            recorder.stop();
-                        }
-                    }, durationMs);
-                } catch (err) {
-                    reject(new Error("Erro ao gravar áudio do ambiente: " + err.message));
-                }
-            });
-        }
-
-        function sendWhatsAppAlerts(contacts, messageText, locationUrl) {
-            const fullText = encodeURIComponent(`${messageText}\nMinha localização atual: ${locationUrl}`);
-            
-            // Dispara links do WhatsApp para cada contato configurado
-            contacts.forEach((number, index) => {
-                setTimeout(() => {
-                    const url = `https://api.whatsapp.com/send?phone=${number}&text=${fullText}`;
-                    window.open(url, '_blank');
-                }, index * 1000); // Delay de 1 segundo entre disparos para evitar bloqueio de pop-up
             });
         }
     </script>
 </body>
 </html>
-
