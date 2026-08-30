@@ -167,20 +167,6 @@
 
         .btn-cancel { background: #555; color: white; }
         .btn-send { background: var(--green-btn); color: white; }
-
-        .recording-indicator {
-            color: #ff5252;
-            font-weight: bold;
-            animation: blink 1s infinite;
-            display: inline-block;
-            margin-left: 5px;
-        }
-
-        @keyframes blink {
-            0% { opacity: 1; }
-            50% { opacity: 0.3; }
-            100% { opacity: 1; }
-        }
     </style>
 </head>
 <body>
@@ -209,11 +195,8 @@
     <div id="customModal" class="modal">
         <div class="modal-content">
             <h3 id="modalTitle">Informações Adicionais</h3>
-            <p style="font-size: 0.8rem; color: #aaa; margin-bottom: 10px;">Descreva o ocorrido ou dite por voz (respeitando o limite de SMS).</p>
-            <textarea id="additionalInfo" rows="4" placeholder="Ex: Meu carro quebrou na rodovia..."></textarea>
-            
-            <button class="btn-config" id="recordVoiceBtn" onclick="toggleVoiceTranscription()" style="margin-bottom: 10px;">🎙️ Ditar por Voz (Transcrição)</button>
-            <span id="voiceStatus" style="font-size: 0.8rem; display:block; margin-bottom: 10px;">Aguardando comando de voz.</span>
+            <p style="font-size: 0.8rem; color: #aaa; margin-bottom: 10px;">Descreva o ocorrido (respeitando o limite de SMS).</p>
+            <textarea id="additionalInfo" rows="4" placeholder="Ex: Meu veículo parou na rodovia..."></textarea>
 
             <div class="modal-buttons">
                 <button class="btn-action btn-cancel" onclick="closeModal()">Cancelar</button>
@@ -226,7 +209,6 @@
         const SMS_LIMIT = 160;
         let currentMode = '';
         let redAlertInterval = null;
-        let recognition = null;
 
         window.onload = function() {
             const savedSMS = localStorage.getItem('excellington_sms');
@@ -263,20 +245,20 @@
             return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
         }
 
-        function criarMensagemSMS(tipo, localizacao, textoVoz = '') {
+        function criarMensagemSMS(tipo, localizacao, textoAdicional = '') {
             let base = '';
             const locFormatada = removerAcentos(localizacao);
-            const vozFormatada = removerAcentos(textoVoz);
+            const infoFormatada = removerAcentos(textoAdicional);
 
             switch (tipo) {
                 case 'perigo':
                     base = `SOCORRO! Perigo iminente. Local: ${locFormatada}. Ajuda urgente!`;
                     break;
                 case 'orange':
-                    base = `Alerta ACIDENTE: ${vozFormatada}. Local: ${locFormatada}`;
+                    base = `Alerta ACIDENTE: ${infoFormatada}. Local: ${locFormatada}`;
                     break;
                 case 'yellow':
-                    base = `Alerta PANE: ${vozFormatada}. Local: ${locFormatada}`;
+                    base = `Alerta PANE/ATAQUE: ${infoFormatada}. Local: ${locFormatada}`;
                     break;
                 default:
                     base = `Alerta Socorro Excellington. Local: ${locFormatada}`;
@@ -284,11 +266,11 @@
 
             if (base.length > SMS_LIMIT) {
                 const excesso = base.length - SMS_LIMIT;
-                const tamanhoDisponivelVoz = vozFormatada.length - excesso;
+                const tamanhoDisponivelInfo = infoFormatada.length - excesso;
                 
-                if (tamanhoDisponivelVoz > 0) {
-                    const vozReduzida = vozFormatada.substring(0, tamanhoDisponivelVoz - 3) + '...';
-                    return criarMensagemSMS(tipo, localizacao, vozReduzida);
+                if (tamanhoDisponivelInfo > 0) {
+                    const infoReduzida = infoFormatada.substring(0, tamanhoDisponivelInfo - 3) + '...';
+                    return criarMensagemSMS(tipo, localizacao, infoReduzida);
                 } else {
                     base = base.substring(0, SMS_LIMIT - 3) + '...';
                 }
@@ -304,7 +286,7 @@
                 return;
             }
 
-            if (!confirm("ATENÇÃO: Você acionará o alerta máximo de PERIGO via SMS. Deseja prosseguir?")) return;
+            if (!confirm("ATENÇÃO: Você acionará o alerta máximo de PERIGO via SMS a cada 5 minutos. Deseja prosseguir?")) return;
 
             showStatus("🚨 ALERTA DE PERIGO ATIVADO! Obtendo localização...", "#d32f2f");
             
@@ -313,14 +295,14 @@
             if (redAlertInterval) clearInterval(redAlertInterval);
             redAlertInterval = setInterval(() => {
                 executeRedAlertCycle(smsNumber);
-            }, 300000);
+            }, 300000); // Repetição automática a cada 5 minutos
         }
 
         async function executeRedAlertCycle(smsNumber) {
             try {
                 const locationUrl = await getLocation();
                 sendSMS(smsNumber, 'perigo', locationUrl, '');
-                showStatus(`✅ SMS de perigo disparado. Próximo ciclo em 5 minutos.`, "#388e3c");
+                showStatus(`✅ SMS de perigo disparado. Próximo envio automático em 5 minutos.`, "#388e3c");
             } catch (error) {
                 showStatus(`❌ Erro no ciclo de perigo: ${error.message}`, "#d32f2f");
             }
@@ -335,74 +317,18 @@
             currentMode = mode;
             document.getElementById('modalTitle').innerText = mode === 'orange' ? "🟠 Alerta de Acidente" : "🟡 Alerta de Pane / Ataque";
             document.getElementById('additionalInfo').value = '';
-            document.getElementById('voiceStatus').innerText = "Aguardando comando de voz.";
             document.getElementById('customModal').style.display = "flex";
         }
 
         function closeModal() {
-            if (recognition) {
-                recognition.stop();
-            }
             document.getElementById('customModal').style.display = 'none';
-        }
-
-        function toggleVoiceTranscription() {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) {
-                alert("Seu navegador não suporta reconhecimento de voz.");
-                return;
-            }
-
-            const status = document.getElementById('voiceStatus');
-            const btn = document.getElementById('recordVoiceBtn');
-            const textArea = document.getElementById('additionalInfo');
-
-            if (!recognition) {
-                recognition = new SpeechRecognition();
-                recognition.lang = 'pt-BR';
-                recognition.interimResults = false;
-                recognition.maxAlternatives = 1;
-
-                recognition.onstart = () => {
-                    status.innerHTML = `Ouvindo... <span class="recording-indicator">● REC</span>`;
-                    btn.style.background = "#d32f2f";
-                    btn.innerText = "⏹️ Parar Escuta";
-                };
-
-                recognition.onresult = (event) => {
-                    const transcript = event.results[0][0].transcript;
-                    textArea.value = transcript;
-                    status.innerText = "Transcrição concluída com sucesso!";
-                    btn.style.background = "#444";
-                    btn.innerText = "🎙️ Ditar por Voz (Transcrição)";
-                    recognition = null;
-                };
-
-                recognition.onerror = () => {
-                    status.innerText = "Erro na captura de voz. Tente digitar.";
-                    btn.style.background = "#444";
-                    btn.innerText = "🎙️ Ditar por Voz (Transcrição)";
-                    recognition = null;
-                };
-
-                recognition.onend = () => {
-                    btn.style.background = "#444";
-                    btn.innerText = "🎙️ Ditar por Voz (Transcrição)";
-                    recognition = null;
-                };
-
-                recognition.start();
-            } else {
-                recognition.stop();
-                recognition = null;
-            }
         }
 
         async function sendCustomAlert() {
             closeModal();
             const smsNumber = localStorage.getItem('excellington_sms');
             const info = document.getElementById('additionalInfo').value.trim();
-            const alertLabel = currentMode === 'orange' ? "acidente" : "pane";
+            const alertLabel = currentMode === 'orange' ? "acidente" : "pane/ataque";
 
             showStatus("Obtendo localização e preparando SMS...", "#f57c00");
 
@@ -415,8 +341,8 @@
             }
         }
 
-        function sendSMS(number, type, locationUrl, voiceText) {
-            const finalMessage = criarMensagemSMS(type, locationUrl, voiceText);
+        function sendSMS(number, type, locationUrl, infoText) {
+            const finalMessage = criarMensagemSMS(type, locationUrl, infoText);
             const separator = /iPad|iPhone|iPod/.test(navigator.userAgent) ? '&' : '?';
             const url = `sms:${number}${separator}body=${encodeURIComponent(finalMessage)}`;
             window.location.href = url;
