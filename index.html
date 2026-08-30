@@ -272,11 +272,11 @@
                 case 'perigo':
                     base = `SOCORRO! Perigo iminente. Local: ${locFormatada}. Ajuda urgente!`;
                     break;
-                case 'acidente':
-                    base = `ACIDENTE! ${vozFormatada}. Local: ${locFormatada}`;
+                case 'orange':
+                    base = `Alerta ACIDENTE: ${vozFormatada}. Local: ${locFormatada}`;
                     break;
-                case 'pane':
-                    base = `PANE! Veiculo imobilizado. ${vozFormatada}. Local: ${locFormatada}`;
+                case 'yellow':
+                    base = `Alerta PANE: ${vozFormatada}. Local: ${locFormatada}`;
                     break;
                 default:
                     base = `Alerta Socorro Excellington. Local: ${locFormatada}`;
@@ -297,7 +297,6 @@
             return base;
         }
 
-        // --- BOTÃO VERMELHO (PERIGO IMINENTE) ---
         function triggerRedAlert() {
             const smsNumber = localStorage.getItem('excellington_sms');
             if (!smsNumber) {
@@ -314,7 +313,7 @@
             if (redAlertInterval) clearInterval(redAlertInterval);
             redAlertInterval = setInterval(() => {
                 executeRedAlertCycle(smsNumber);
-            }, 300000); // A cada 5 minutos
+            }, 300000);
         }
 
         async function executeRedAlertCycle(smsNumber) {
@@ -327,7 +326,6 @@
             }
         }
 
-        // --- BOTÕES LARANJA E AMARELO ---
         function openModal(mode) {
             const smsNumber = localStorage.getItem('excellington_sms');
             if (!smsNumber) {
@@ -380,7 +378,7 @@
                     recognition = null;
                 };
 
-                recognition.onerror = (event) => {
+                recognition.onerror = () => {
                     status.innerText = "Erro na captura de voz. Tente digitar.";
                     btn.style.background = "#444";
                     btn.innerText = "🎙️ Ditar por Voz (Transcrição)";
@@ -404,13 +402,14 @@
             closeModal();
             const smsNumber = localStorage.getItem('excellington_sms');
             const info = document.getElementById('additionalInfo').value.trim();
+            const alertLabel = currentMode === 'orange' ? "acidente" : "pane";
 
             showStatus("Obtendo localização e preparando SMS...", "#f57c00");
 
             try {
                 const locationUrl = await getLocation();
                 sendSMS(smsNumber, currentMode, locationUrl, info);
-                showStatus(`✅ Alerta de ${currentMode} enviado com sucesso via SMS!`, "#388e3c");
+                showStatus(`✅ Alerta de ${alertLabel} enviado com sucesso via SMS!`, "#388e3c");
             } catch (error) {
                 showStatus(`❌ Erro ao enviar SMS: ${error.message}`, "#d32f2f");
             }
