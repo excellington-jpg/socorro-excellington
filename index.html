@@ -1,0 +1,458 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Socorro Excellington</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-color: #e0e0e0;
+            --red-btn: #d32f2f;
+            --orange-btn: #f57c00;
+            --yellow-btn: #fbc02d;
+            --green-btn: #388e3c;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+            color: #fff;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 0.85rem;
+            color: #aaa;
+            margin-bottom: 20px;
+        }
+
+        .section {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            color: #ccc;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #444;
+            background: #2a2a2a;
+            color: #fff;
+            font-size: 0.95rem;
+            margin-bottom: 10px;
+        }
+
+        .btn-config {
+            background: #444;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            width: 100%;
+        }
+
+        .btn-config:hover {
+            background: #555;
+        }
+
+        .emergency-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .panic-btn {
+            width: 100%;
+            padding: 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #fff;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            transition: transform 0.1s, opacity 0.2s;
+            text-transform: uppercase;
+        }
+
+        .panic-btn:active {
+            transform: scale(0.97);
+        }
+
+        .btn-red { background-color: var(--red-btn); }
+        .btn-orange { background-color: var(--orange-btn); color: #000; }
+        .btn-yellow { background-color: var(--yellow-btn); color: #000; }
+
+        #status-box {
+            margin-top: 20px;
+            padding: 12px;
+            background: #252525;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            border-left: 4px solid #777;
+            display: none;
+        }
+
+        /* Modal para Botões Laranja e Amarelo */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn-action {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .btn-cancel { background: #555; color: white; }
+        .btn-send { background: var(--green-btn); color: white; }
+
+        .recording-indicator {
+            color: #ff5252;
+            font-weight: bold;
+            animation: blink 1s infinite;
+            display: inline-block;
+            margin-left: 5px;
+        }
+
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Socorro Excellington</h1>
+        <div class="subtitle">Sistema de Alerta e Geolocalização de Emergência</div>
+
+        <div class="section">
+            <label for="contactsInput">Contatos WhatsApp (números com DDI e DDD, separados por vírgula):</label>
+            <input type="text" id="contactsInput" placeholder="Ex: 5531999999999, 5531888888888">
+            <button class="btn-config" onclick="saveContacts()">Salvar Configurações</button>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid #333; margin: 15px 0;">
+
+        <div class="emergency-grid">
+            <button class="panic-btn btn-red" onclick="triggerRedAlert()">🔴 Perigo Iminente</button>
+            <button class="panic-btn btn-orange" onclick="openModal('orange')">🟠 Acidente</button>
+            <button class="panic-btn btn-yellow" onclick="openModal('yellow')">🟡 Pane / Ataque</button>
+        </div>
+
+        <div id="status-box"></div>
+    </div>
+
+    <div id="customModal" class="modal">
+        <div class="modal-content">
+            <h3 id="modalTitle">Informações Adicionais</h3>
+            <p style="font-size: 0.8rem; color: #aaa; margin-bottom: 10px;">Descreva o ocorrido ou grave um áudio opcional.</p>
+            <textarea id="additionalInfo" rows="4" placeholder="Ex: Meu carro quebrou na rodovia X, preciso de guincho..."></textarea>
+            
+            <button class="btn-config" id="recordAudioBtn" onclick="toggleAudioRecordModal()" style="margin-bottom: 10px;">🎙️ Gravar Áudio (Opcional)</button>
+            <span id="audioStatus" style="font-size: 0.8rem; display:block; margin-bottom: 10px;">Nenhum áudio gravado.</span>
+
+            <div class="modal-buttons">
+                <button class="btn-action btn-cancel" onclick="closeModal()">Cancelar</button>
+                <button class="btn-action btn-send" onclick="sendCustomAlert()">Enviar Alerta</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentMode = '';
+        let mediaRecorder;
+        let audioChunks = [];
+        let recordedBlob = null;
+        let redAlertInterval = null;
+
+        // Carregar contatos salvos ao iniciar
+        window.onload = function() {
+            const saved = localStorage.getItem('excellington_contacts');
+            if (saved) {
+                document.getElementById('contactsInput').value = saved;
+            }
+            requestPermissionsEarly();
+        };
+
+        function saveContacts() {
+            const contacts = document.getElementById('contactsInput').value.trim();
+            localStorage.setItem('excellington_contacts', contacts);
+            showStatus("Contatos salvos com sucesso!", "green");
+        }
+
+        // Solicita permissões de Geolocalização e Microfone preventivamente
+        async function requestPermissionsEarly() {
+            try {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(() => {}, () => {}, {maximumAge: 60000, timeout: 5000});
+                }
+                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    stream.getTracks().forEach(track => track.stop());
+                }
+            } catch (e) {
+                console.log("Permissões prévias pendentes ou negadas.");
+            }
+        }
+
+        function showStatus(text, color = "#777") {
+            const box = document.getElementById('status-box');
+            box.style.display = "block";
+            box.style.borderLeftColor = color;
+            box.innerHTML = text;
+        }
+
+        // --- BOTÃO VERMELHO (PERIGO IMINENTE) ---
+        function triggerRedAlert() {
+            const contacts = getContactsList();
+            if (contacts.length === 0) {
+                alert("Configure pelo menos um contato do WhatsApp antes de usar.");
+                return;
+            }
+
+            if (!confirm("ATENÇÃO: Você acionará o alerta máximo de PERIGO. Deseja prosseguir?")) return;
+
+            showStatus("🚨 ALERTA DE PERIGO ATIVADO! Obtendo localização e gravando áudio...", "#d32f2f");
+            
+            // Executa o primeiro ciclo imediatamente
+            executeRedAlertCycle(contacts);
+
+            // Agenda repetição a cada 5 minutos (300000 ms)
+            if (redAlertInterval) clearInterval(redAlertInterval);
+            redAlertInterval = setInterval(() => {
+                executeRedAlertCycle(contacts);
+            }, 300000);
+        }
+
+        async function executeRedAlertCycle(contacts) {
+            try {
+                const location = await getLocation();
+                showStatus(`🔴 Gravando áudio ambiente (1 min) <span class="recording-indicator">● REC</span>`, "#d32f2f");
+                
+                const audioBlob = await recordAudio(60000); // 1 minuto de gravação
+                
+                // Envio para os contatos via WhatsApp API links
+                sendWhatsAppAlerts(contacts, "PERIGO IMINENTE! Preciso de ajuda urgente.", location);
+                showStatus(`✅ Alerta enviado com sucesso. Próxima varredura em 5 minutos.`, "#388e3c");
+            } catch (error) {
+                showStatus(`❌ Erro no ciclo de perigo: ${error.message}`, "#d32f2f");
+            }
+        }
+
+        // --- BOTÕES LARANJA E AMARELO ---
+        function openModal(mode) {
+            const contacts = getContactsList();
+            if (contacts.length === 0) {
+                alert("Configure pelo menos um contato do WhatsApp antes de usar.");
+                return;
+            }
+            currentMode = mode;
+            document.getElementById('modalTitle').innerText = mode === 'orange' ? "🟠 Alerta de Acidente" : "🟡 Alerta de Pane / Ataque";
+            document.getElementById('additionalInfo').value = '';
+            recordedBlob = null;
+            document.getElementById('audioStatus').innerText = "Nenhum áudio gravado.";
+            document.getElementById('customModal').style.display = "flex";
+        }
+
+        function closeModal() {
+            document.getElementById('customModal').style.display = 'none';
+        }
+
+        let isRecordingModal = false;
+        async function toggleAudioRecordModal() {
+            const btn = document.getElementById('recordAudioBtn');
+            const status = document.getElementById('audioStatus');
+
+            if (!isRecordingModal) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+
+                    mediaRecorder.ondataavailable = event => audioChunks.push(event.data);
+                    mediaRecorder.onstop = () => {
+                        recordedBlob = new Blob(audioChunks, { type: 'audio/mp3' });
+                        status.innerText = "Áudio gravado com sucesso! Pronto para envio.";
+                        btn.style.background = "#444";
+                        btn.innerText = "🎙️ Gravar Áudio (Opcional)";
+                    };
+
+                    mediaRecorder.start();
+                    isRecordingModal = true;
+                    btn.style.background = "#d32f2f";
+                    btn.innerText = "⏹️ Parar Gravação";
+                    status.innerHTML = `Gravando... <span class="recording-indicator">● REC</span>`;
+                } catch (err) {
+                    alert("Erro ao acessar microfone: " + err.message);
+                }
+            } else {
+                mediaRecorder.stop();
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                isRecordingModal = false;
+            }
+        }
+
+        async function sendCustomAlert() {
+            closeModal();
+            const contacts = getContactsList();
+            const info = document.getElementById('additionalInfo').value.trim();
+            const prefix = currentMode === 'orange' ? "ACIDENTE" : "PANE / ATAQUE";
+            const message = `${prefix}: ${info ? info : 'Sem informações adicionais.'}`;
+
+            showStatus("Obtendo localização e enviando alerta...", "#f57c00");
+
+            try {
+                const location = await getLocation();
+                sendWhatsAppAlerts(contacts, message, location);
+                showStatus(`✅ Alerta de ${prefix.toLowerCase()} enviado com sucesso!`, "#388e3c");
+            } catch (error) {
+                showStatus(`❌ Erro ao enviar alerta: ${error.message}`, "#d32f2f");
+            }
+        }
+
+        // --- UTILITÁRIOS DE SISTEMA ---
+        function getContactsList() {
+            const raw = document.getElementById('contactsInput').value;
+            return raw.split(',').map(n => n.trim()).filter(n => n.length > 0);
+        }
+
+        function getLocation() {
+    return new Promise((resolve, reject) => {
+        if (!navigator.geolocation) {
+            reject(new Error("Geolocalização não suportada pelo navegador."));
+            return;
+        }
+
+        // Primeira tentativa: Alta precisão com 15 segundos de timeout
+        navigator.geolocation.getCurrentPosition(
+            position => {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+                resolve(`https://maps.google.com/?q=${lat},${lon}`);
+            },
+            error => {
+                // Segunda tentativa (Fallback): Precisão padrão (rede/Wi-Fi), ideal para dentro de imóveis
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        const lat = position.coords.latitude;
+                        const lon = position.coords.longitude;
+                        resolve(`https://maps.google.com/?q=${lat},${lon}`);
+                    },
+                    err2 => {
+                        reject(new Error("Não foi possível obter a localização. Verifique se o navegador tem permissão de GPS e se a página está em HTTPS."));
+                    },
+                    { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
+                );
+            },
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+        );
+    });
+}
+
+
+
+        function recordAudio(durationMs) {
+            return new Promise(async (resolve, reject) => {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    const recorder = new MediaRecorder(stream);
+                    let chunks = [];
+
+                    recorder.ondataavailable = e => chunks.push(e.data);
+                    recorder.onstop = () => {
+                        const blob = new Blob(chunks, { type: 'audio/webm' });
+                        stream.getTracks().forEach(track => track.stop());
+                        resolve(blob);
+                    };
+
+                    recorder.start();
+                    setTimeout(() => {
+                        if (recorder.state === "recording") {
+                            recorder.stop();
+                        }
+                    }, durationMs);
+                } catch (err) {
+                    reject(new Error("Erro ao gravar áudio do ambiente: " + err.message));
+                }
+            });
+        }
+
+        function sendWhatsAppAlerts(contacts, messageText, locationUrl) {
+            const fullText = encodeURIComponent(`${messageText}\nMinha localização atual: ${locationUrl}`);
+            
+            // Dispara links do WhatsApp para cada contato configurado
+            contacts.forEach((number, index) => {
+                setTimeout(() => {
+                    const url = `https://api.whatsapp.com/send?phone=${number}&text=${fullText}`;
+                    window.open(url, '_blank');
+                }, index * 1000); // Delay de 1 segundo entre disparos para evitar bloqueio de pop-up
+            });
+        }
+    </script>
+</body>
+</html>
+
