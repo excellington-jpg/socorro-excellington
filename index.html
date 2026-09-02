@@ -284,8 +284,8 @@
     <div id="usernameModal" class="modal">
         <div class="modal-content">
             <h3 style="color: #fff; margin-bottom: 5px;">Identifica&ccedil;&atilde;o do Usu&aacute;rio</h3>
-            <p style="font-size: 0.85rem; color: #aaa; margin-bottom: 15px;">Informe seu nome ou estabelecimento para iniciar o uso do sistema.</p>
-            <input type="text" id="registerUsernameInput" placeholder="Seu Nome ou Estabelecimento">
+            <p style="font-size: 0.85rem; color: #aaa; margin-bottom: 15px;">Informe seu nome para iniciar o uso do sistema.</p>
+            <input type="text" id="registerUsernameInput" placeholder="Seu Nome">
             <div style="display: flex; gap: 10px; margin-top: 5px;">
                 <button class="btn-action btn-cancel" id="cancelUsernameBtn" onclick="closeUsernameModal()" style="display: none;">Cancelar</button>
                 <button class="btn-action btn-send" style="background: var(--green-btn);" onclick="handleUsernameSubmit(event)">Salvar e Continuar</button>
@@ -323,7 +323,7 @@
             </div>
 
             <div style="margin-bottom: 15px;">
-                <div style="text-align: center; font-size: 0.7rem; color: #8c95a7; font-weight: bold; letter-spacing: 0.5px; margin-bottom: 6px; text-transform: uppercase;">Chave Pix (Celular)</div>
+                <div style="text-align: center; font-size: 0.7rem; color: #8c95a7; font-weight: bold; letter-spacing: 0.5px; margin-bottom: 6px; text-transform: uppercase;">Chave Pix</div>
                 <input type="text" id="pixKeyInput" readonly value="16250510850" style="background: #121418; color: #4caf50; font-family: monospace; text-align: center; font-weight: bold; border: 1px solid #2a2f3d;">
                 <button class="btn-config" onclick="copyPixKey()" id="copyPixBtn" style="margin-top: 5px; background: #00875f; display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: 500;">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
@@ -395,7 +395,7 @@
             e.preventDefault();
             const nameInput = document.getElementById('registerUsernameInput').value.trim();
             if (!nameInput) {
-                alert("Por favor, informe seu nome ou estabelecimento.");
+                alert("Por favor, informe seu nome.");
                 return;
             }
 
