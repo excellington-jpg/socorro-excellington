@@ -234,7 +234,7 @@
         <div class="header-top">
             <h1>Socorro Excellington</h1>
             <div class="header-actions">
-                <button class="icon-btn" onclick="toggleActivationModal()" title="Tela de Ativa&ccedil;&atilde;o e Licen&ccedil;a">
+                <button class="icon-btn" onclick="openActivationModal(false)" title="Tela de Ativação e Licença">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f57c00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.77 7.77 5.5 5.5 0 0 1 7.77-7.77zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
                 </button>
                 <button class="icon-btn" onclick="exitApp()" title="Sair do Aplicativo">
@@ -242,17 +242,17 @@
                 </button>
             </div>
         </div>
-        <div class="subtitle">Sistema de Alerta SMS e Geolocaliza&ccedil;&atilde;o</div>
+        <div class="subtitle">Sistema de Alerta SMS e Geolocalização</div>
 
         <div class="user-profile-bar" id="userProfileBar" style="display: none;">
-            Usu&aacute;rio: <span id="profileUsernameDisplay">-</span>
+            Usuário: <span id="profileUsernameDisplay">-</span>
             <button onclick="openUsernameModal()">Editar</button>
         </div>
 
         <div class="section">
-            <label for="smsInput">N&uacute;mero de SMS de Emerg&ecirc;ncia (com DDI e DDD):</label>
+            <label for="smsInput">Número de SMS de Emergência (com DDI e DDD):</label>
             <input type="text" id="smsInput" placeholder="Ex: 5531999999999">
-            <button class="btn-config" onclick="saveConfig()">Salvar Configura&ccedil;&atilde;o</button>
+            <button class="btn-config" onclick="saveConfig()">Salvar Configuração</button>
         </div>
 
         <hr style="border: 0; border-top: 1px solid #333; margin: 15px 0;">
@@ -269,7 +269,7 @@
     <!-- Modal de Alerta Customizado -->
     <div id="customModal" class="modal">
         <div class="modal-content">
-            <h3 id="modalTitle">Informa&ccedil;&otilde;es Adicionais</h3>
+            <h3 id="modalTitle">Informações Adicionais</h3>
             <p style="font-size: 0.8rem; color: #aaa; margin-bottom: 10px;">Descreva o ocorrido (respeitando o limite de SMS).</p>
             <textarea id="additionalInfo" rows="4" placeholder=""></textarea>
 
@@ -280,10 +280,10 @@
         </div>
     </div>
 
-    <!-- Modal de Cadastro / Edi??o Inicial de Usuário -->
+    <!-- Modal de Cadastro / Edição Inicial de Usuário -->
     <div id="usernameModal" class="modal">
         <div class="modal-content">
-            <h3 style="color: #fff; margin-bottom: 5px;">Identifica&ccedil;&atilde;o do Usu&aacute;rio</h3>
+            <h3 style="color: #fff; margin-bottom: 5px;">Identificação do Usuário</h3>
             <p style="font-size: 0.85rem; color: #aaa; margin-bottom: 15px;">Informe seu nome para iniciar o uso do sistema.</p>
             <input type="text" id="registerUsernameInput" placeholder="Seu Nome">
             <div style="display: flex; gap: 10px; margin-top: 5px;">
@@ -293,7 +293,7 @@
         </div>
     </div>
 
-    <!-- Modal de Ativa??o Mensal via Pix -->
+    <!-- Modal de Ativação Mensal via Pix -->
     <div id="activationModal" class="modal">
         <div class="modal-content" style="max-height: 90vh; overflow-y: auto;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
@@ -301,23 +301,23 @@
                     <div style="background: rgba(56, 142, 60, 0.2); padding: 6px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4caf50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
                     </div>
-                    <h3 style="color: #fff; font-size: 1.05rem;">Renova&ccedil;&atilde;o Mensal Pix</h3>
+                    <h3 style="color: #fff; font-size: 1.05rem;">Renovação Mensal Pix</h3>
                 </div>
-                <button onclick="toggleActivationModal()" style="background: none; border: none; color: #aaa; font-size: 1.2rem; cursor: pointer;">&times;</button>
+                <button id="activationCloseBtn" onclick="toggleActivationModal()" style="background: none; border: none; color: #aaa; font-size: 1.2rem; cursor: pointer;">&times;</button>
             </div>
             
             <p style="font-size: 0.8rem; color: #aaa; margin-bottom: 15px; line-height: 1.4;">
-                Para manter o sistema ativo por mais 30 dias, apoie o projeto com qualquer valor via Pix, envie o comprovante juntamente com as informa&ccedil;&otilde;es abaixo para <strong style="color: #4caf50;">excellington@gmail.com</strong> e insira o c&oacute;digo de libera&ccedil;&atilde;o recebido.
+                Para manter o sistema ativo por mais 30 dias, apoie o projeto com qualquer valor via Pix, envie o comprovante juntamente com as informações abaixo para <strong style="color: #4caf50;">excellington@gmail.com</strong> e insira o código de liberação recebido.
             </p>
 
             <div style="background: #171a21; border: 1px solid #2a2f3d; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
-                <div style="text-align: center; font-size: 0.7rem; color: #8c95a7; font-weight: bold; letter-spacing: 0.5px; margin-bottom: 10px; text-transform: uppercase;">Dados para gera&ccedil;&atilde;o do c&oacute;digo</div>
+                <div style="text-align: center; font-size: 0.7rem; color: #8c95a7; font-weight: bold; letter-spacing: 0.5px; margin-bottom: 10px; text-transform: uppercase;">Dados para geração do código</div>
                 <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.85rem;">
-                    <span style="color: #8c95a7;">Usu&aacute;rio:</span>
+                    <span style="color: #8c95a7;">Usuário:</span>
                     <span id="activationUsernameDisplay" style="color: #64b5f6; font-weight: bold;">-</span>
                 </div>
                 <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
-                    <span style="color: #8c95a7;">Data de Expira&ccedil;&atilde;o:</span>
+                    <span style="color: #8c95a7;">Data de Expiração:</span>
                     <span id="activationExpirationDisplay" style="color: #e57373; font-weight: bold;">-</span>
                 </div>
             </div>
@@ -332,8 +332,8 @@
             </div>
 
             <div style="border-top: 1px solid #2a2f3d; padding-top: 12px;">
-                <label style="font-size: 0.8rem; margin-bottom: 4px; color: #ccc;">C&oacute;digo de Ativa&ccedil;&atilde;o (10 d&iacute;gitos):</label>
-                <input type="text" id="activationCodeInput" placeholder="Digite o c&oacute;digo de libera&ccedil;&atilde;o" style="background: #121418; border: 1px solid #2a2f3d;">
+                <label style="font-size: 0.8rem; margin-bottom: 4px; color: #ccc;">Código de Ativação (Gerado pelo Admin):</label>
+                <input type="text" id="activationCodeInput" placeholder="Digite o código de liberação" style="background: #121418; border: 1px solid #2a2f3d;">
                 <button class="btn-action btn-send" style="width: 100%; margin-top: 5px; padding: 11px;" onclick="validateActivationCode()">Ativar Aplicativo</button>
             </div>
         </div>
@@ -343,9 +343,10 @@
         const SMS_LIMIT = 160;
         let currentMode = '';
         let redAlertInterval = null;
+        let isAppForcedBlocked = false;
 
-        const USERNAME_KEY = 'excellington_username_v1';
-        const EXPIRATION_KEY = 'excellington_expiration_v1';
+        const USERNAME_KEY = 'excellington_socorro_username_v1';
+        const EXPIRATION_KEY = 'excellington_socorro_expiration_v1';
 
         window.onload = function() {
             checkAppAccess();
@@ -357,27 +358,40 @@
             requestPermissionsEarly();
         };
 
+        function readStoredExpiration() {
+            const raw = localStorage.getItem(EXPIRATION_KEY);
+            if (raw === null || raw.trim() === '') return null;
+            const numeric = Number(raw);
+            if (Number.isFinite(numeric) && numeric > 0) {
+                return numeric < 100000000000 ? numeric * 1000 : numeric;
+            }
+            const parsed = Date.parse(raw);
+            return Number.isFinite(parsed) ? parsed : null;
+        }
+
         function checkAppAccess() {
             const username = localStorage.getItem(USERNAME_KEY);
+            const usernameModal = document.getElementById('usernameModal');
+
             if (!username) {
                 document.getElementById('cancelUsernameBtn').style.display = 'none';
                 document.getElementById('registerUsernameInput').value = '';
-                document.getElementById('usernameModal').style.display = 'flex';
-                return;
+                if (usernameModal) usernameModal.style.display = 'flex';
+                return false;
             }
 
-            // Atualiza o painel de perfil na tela principal
             document.getElementById('profileUsernameDisplay').innerText = username;
             document.getElementById('userProfileBar').style.display = 'flex';
 
-            const expiration = localStorage.getItem(EXPIRATION_KEY);
+            const expiration = readStoredExpiration();
             const now = Date.now();
 
-            if (!expiration || now > parseInt(expiration)) {
-                document.getElementById('activationModal').style.display = 'flex';
-                updateActivationInfo();
-                return;
+            if (!expiration || now > expiration) {
+                openActivationModal(true); // Bloqueio forçado por expiração
+                return false;
             }
+
+            return true;
         }
 
         function openUsernameModal() {
@@ -403,38 +417,68 @@
             localStorage.setItem(USERNAME_KEY, nameInput);
             document.getElementById('usernameModal').style.display = 'none';
 
-            if (isFirstTime) {
+            if (isFirstTime && readStoredExpiration() === null) {
                 const initialTrial = Date.now() + (30 * 24 * 60 * 60 * 1000);
-                localStorage.setItem(EXPIRATION_KEY, initialTrial.toString());
+                localStorage.setItem(EXPIRATION_KEY, String(initialTrial));
             }
 
             checkAppAccess();
         }
 
-        function toggleActivationModal() {
+        function openActivationModal(forced = false) {
+            isAppForcedBlocked = forced;
             const modal = document.getElementById('activationModal');
-            if (modal.style.display === 'flex') {
-                modal.style.display = 'none';
-            } else {
-                modal.style.display = 'flex';
-                updateActivationInfo();
+            const closeBtn = document.getElementById('activationCloseBtn');
+            
+            if (closeBtn) {
+                if (forced) {
+                    closeBtn.style.display = 'none';
+                } else {
+                    closeBtn.style.display = 'block';
+                }
+            }
+            if (modal) modal.style.display = 'flex';
+            updateActivationInfo();
+        }
+
+        function toggleActivationModal() {
+            if (isAppForcedBlocked) return;
+            const modal = document.getElementById('activationModal');
+            if (modal) {
+                if (modal.style.display === 'flex') {
+                    modal.style.display = 'none';
+                } else {
+                    modal.style.display = 'flex';
+                    isAppForcedBlocked = false;
+                    const closeBtn = document.getElementById('activationCloseBtn');
+                    if (closeBtn) closeBtn.style.display = 'block';
+                    updateActivationInfo();
+                }
             }
         }
 
+        function getRenewalTargetDate() {
+            const storedExpiration = readStoredExpiration();
+            const baseDate = (storedExpiration !== null && storedExpiration > Date.now()) 
+                ? new Date(storedExpiration) 
+                : new Date();
+
+            const targetDate = new Date(baseDate);
+            targetDate.setDate(targetDate.getDate() + 30);
+            targetDate.setHours(23, 59, 59, 999);
+            return targetDate;
+        }
+
         function updateActivationInfo() {
-            const username = localStorage.getItem(USERNAME_KEY) || 'N&atilde;o cadastrado';
+            const username = localStorage.getItem(USERNAME_KEY) || 'Não cadastrado';
             document.getElementById('activationUsernameDisplay').innerText = username;
 
-            const expirationVal = localStorage.getItem(EXPIRATION_KEY);
+            const targetDate = getRenewalTargetDate();
             const expEl = document.getElementById('activationExpirationDisplay');
-
-            if (expirationVal) {
-                const expDate = new Date(parseInt(expirationVal));
-                expEl.innerText = expDate.toLocaleDateString('pt-BR', {
+            if (expEl) {
+                expEl.innerText = targetDate.toLocaleDateString('pt-BR', {
                     day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
                 });
-            } else {
-                expEl.innerText = 'N&atilde;o definido';
             }
         }
 
@@ -452,24 +496,34 @@
             const username = localStorage.getItem(USERNAME_KEY) || '';
             const cleanName = username.replace(/\s+/g, '');
             const charCount = cleanName.length;
+            const targetDate = getRenewalTargetDate();
 
-            const targetDate = new Date();
-            targetDate.setDate(targetDate.getDate() + 30);
             const day = targetDate.getDate();
             const month = targetDate.getMonth() + 1;
             const year = targetDate.getFullYear();
 
-            const sum = charCount + day + month + year;
-            const expectedCode = Math.pow(sum, 3).toString().padStart(10, '0');
+            const baseSum = charCount + day + month + year;
+            const expectedCode = String(Math.pow(baseSum, 3));
 
             if (codeInput === expectedCode || codeInput === "1234567890") {
                 localStorage.setItem(EXPIRATION_KEY, targetDate.getTime().toString());
+                isAppForcedBlocked = false;
                 document.getElementById('activationModal').style.display = 'none';
                 alert("Aplicativo ativado com sucesso por mais 30 dias!");
                 checkAppAccess();
             } else {
-                alert("C&oacute;digo de ativa&ccedil;&atilde;o inv&aacute;lido. Verifique o comprovante enviado para excellington@gmail.com.");
+                alert("Código de ativação inválido. Verifique os dados informados.");
             }
+        }
+
+        function checkAccessBeforeAction() {
+            const expiration = readStoredExpiration();
+            const now = Date.now();
+            if (!expiration || now > expiration) {
+                openActivationModal(true);
+                return false;
+            }
+            return true;
         }
 
         function exitApp() {
@@ -481,10 +535,16 @@
             }
         }
 
+        setInterval(() => checkAccessBeforeAction(), 60 * 1000);
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) checkAccessBeforeAction();
+        });
+
         function saveConfig() {
+            if (!checkAccessBeforeAction()) return;
             const smsNumber = document.getElementById('smsInput').value.trim();
             localStorage.setItem('excellington_sms', smsNumber);
-            showStatus("N&uacute;mero de SMS salvo com sucesso!", "green");
+            showStatus("Número de SMS salvo com sucesso!", "green");
         }
 
         async function requestPermissionsEarly() {
@@ -493,7 +553,7 @@
                     navigator.geolocation.getCurrentPosition(() => {}, () => {}, {maximumAge: 60000, timeout: 5000});
                 }
             } catch (e) {
-                console.log("Permiss&atilde;o pr&eacute;via de geolocaliza&ccedil;&atilde;o pendente.");
+                console.log("Permissão prévia de geolocalização pendente.");
             }
         }
 
@@ -543,15 +603,16 @@
         }
 
         function triggerRedAlert() {
+            if (!checkAccessBeforeAction()) return;
             const smsNumber = localStorage.getItem('excellington_sms');
             if (!smsNumber) {
-                alert("Configure o n&uacute;mero de SMS de emerg&ecirc;ncia antes de usar.");
+                alert("Configure o número de SMS de emergência antes de usar.");
                 return;
             }
 
-            if (!confirm("ATEN\u00c7\u00c3O: Voc\u00ea acionar&aacute; o alerta m&aacute;ximo de PERIGO via SMS a cada 5 minutos. Deseja prosseguir?")) return;
+            if (!confirm("ATENÇÃO: Você acionará o alerta máximo de PERIGO via SMS a cada 5 minutos. Deseja prosseguir?")) return;
 
-            showStatus("? ALERTA DE PERIGO ATIVADO! Obtendo localiza&ccedil;&atilde;o...", "#d32f2f");
+            showStatus("• ALERTA DE PERIGO ATIVADO! Obtendo localização...", "#d32f2f");
             
             executeRedAlertCycle(smsNumber);
 
@@ -565,16 +626,17 @@
             try {
                 const locationUrl = await getLocation();
                 sendSMS(smsNumber, 'perigo', locationUrl, '');
-                showStatus(`? SMS de perigo disparado. Pr&oacute;ximo envio autom&aacute;tico em 5 minutos.`, "#388e3c");
+                showStatus(`• SMS de perigo disparado. Próximo envio automático em 5 minutos.`, "#388e3c");
             } catch (error) {
-                showStatus(`? Erro no ciclo de perigo: ${error.message}`, "#d32f2f");
+                showStatus(`• Erro no ciclo de perigo: ${error.message}`, "#d32f2f");
             }
         }
 
         function openModal(mode) {
+            if (!checkAccessBeforeAction()) return;
             const smsNumber = localStorage.getItem('excellington_sms');
             if (!smsNumber) {
-                alert("Configure o n&uacute;mero de SMS de emerg&ecirc;ncia antes de usar.");
+                alert("Configure o número de SMS de emergência antes de usar.");
                 return;
             }
             currentMode = mode;
@@ -588,19 +650,20 @@
         }
 
         async function sendCustomAlert() {
+            if (!checkAccessBeforeAction()) return;
             closeModal();
             const smsNumber = localStorage.getItem('excellington_sms');
             const info = document.getElementById('additionalInfo').value.trim();
             const alertLabel = currentMode === 'orange' ? "acidente" : "pane/ataque";
 
-            showStatus("Obtendo localiza&ccedil;&atilde;o e preparando SMS...", "#f57c00");
+            showStatus("Obtendo localização e preparando SMS...", "#f57c00");
 
             try {
                 const locationUrl = await getLocation();
                 sendSMS(smsNumber, currentMode, locationUrl, info);
-                showStatus(`? Alerta de ${alertLabel} enviado com sucesso via SMS!`, "#388e3c");
+                showStatus(`• Alerta de ${alertLabel} enviado com sucesso via SMS!`, "#388e3c");
             } catch (error) {
-                showStatus(`? Erro ao enviar SMS: ${error.message}`, "#d32f2f");
+                showStatus(`• Erro ao enviar SMS: ${error.message}`, "#d32f2f");
             }
         }
 
@@ -614,7 +677,7 @@
         function getLocation() {
             return new Promise((resolve, reject) => {
                 if (!navigator.geolocation) {
-                    reject(new Error("Geolocaliza&ccedil;&atilde;o n&uacuten;o suportada pelo navegador."));
+                    reject(new Error("Geolocalização não suportada pelo navegador."));
                     return;
                 }
 
@@ -631,7 +694,7 @@
                                 const lon = position.coords.longitude;
                                 resolve(`https://maps.google.com/?q=${lat},${lon}`);
                             },
-                            () => reject(new Error("N&atilde;o foi poss&iacute;vel obter a localiza&ccedil;&atilde;o. Verifique o GPS.")),
+                            () => reject(new Error("Não foi possível obter a localização. Verifique o GPS.")),
                             { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
                         );
                     },
