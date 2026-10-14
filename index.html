@@ -457,26 +457,17 @@
             }
         }
 
-        function getRenewalTargetDate() {
-            const storedExpiration = readStoredExpiration();
-            const baseDate = (storedExpiration !== null && storedExpiration > Date.now()) 
-                ? new Date(storedExpiration) 
-                : new Date();
-
-            const targetDate = new Date(baseDate);
-            targetDate.setDate(targetDate.getDate() + 30);
-            targetDate.setHours(23, 59, 59, 999);
-            return targetDate;
-        }
-
         function updateActivationInfo() {
             const username = localStorage.getItem(USERNAME_KEY) || 'Não cadastrado';
             document.getElementById('activationUsernameDisplay').innerText = username;
 
-            const targetDate = getRenewalTargetDate();
+            // CORREÇÃO: Exibe exatamente a data real em que expirou (sem somar dias)
+            const storedExpiration = readStoredExpiration();
+            const expDate = storedExpiration ? new Date(storedExpiration) : new Date();
+
             const expEl = document.getElementById('activationExpirationDisplay');
             if (expEl) {
-                expEl.innerText = targetDate.toLocaleDateString('pt-BR', {
+                expEl.innerText = expDate.toLocaleDateString('pt-BR', {
                     day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
                 });
             }
@@ -496,7 +487,15 @@
             const username = localStorage.getItem(USERNAME_KEY) || '';
             const cleanName = username.replace(/\s+/g, '');
             const charCount = cleanName.length;
-            const targetDate = getRenewalTargetDate();
+
+            // CORREÇÃO: Se já venceu, calcula a partir de hoje. Se ainda está no futuro, acumula a partir da expiração atual.
+            const storedExpiration = readStoredExpiration();
+            const baseTime = (storedExpiration !== null && storedExpiration > Date.now()) 
+                ? storedExpiration 
+                : Date.now();
+
+            const targetDate = new Date(baseTime + (30 * 24 * 60 * 60 * 1000));
+            targetDate.setHours(23, 59, 59, 999);
 
             const day = targetDate.getDate();
             const month = targetDate.getMonth() + 1;
