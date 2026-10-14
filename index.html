@@ -482,38 +482,43 @@
             setTimeout(() => btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Copiar Chave Pix', 1500);
         }
 
-        function validateActivationCode() {
-            const codeInput = document.getElementById('activationCodeInput').value.trim();
+                function validateActivationCode() {
+            const codeInput = document.getElementById('activation-code-input').value.trim();
             const username = localStorage.getItem(USERNAME_KEY) || '';
             const cleanName = username.replace(/\s+/g, '');
             const charCount = cleanName.length;
 
-            // CORREÇÃO: Se já venceu, calcula a partir de hoje. Se ainda está no futuro, acumula a partir da expiração atual.
+            // CORREÇÃO: Utiliza estritamente a data de expiração atualmente armazenada (exibida na tela)
             const storedExpiration = readStoredExpiration();
-            const baseTime = (storedExpiration !== null && storedExpiration > Date.now()) 
-                ? storedExpiration 
-                : Date.now();
+            if (!storedExpiration) {
+                alert("Data de expiração não encontrada.");
+                return;
+            }
 
-            const targetDate = new Date(baseTime + (30 * 24 * 60 * 60 * 1000));
-            targetDate.setHours(23, 59, 59, 999);
-
-            const day = targetDate.getDate();
-            const month = targetDate.getMonth() + 1;
-            const year = targetDate.getFullYear();
+            const expDateObj = new Date(storedExpiration);
+            const day = expDateObj.getDate();
+            const month = expDateObj.getMonth() + 1;
+            const year = expDateObj.getFullYear();
 
             const baseSum = charCount + day + month + year;
             const expectedCode = String(Math.pow(baseSum, 3));
 
             if (codeInput === expectedCode || codeInput === "1234567890") {
+                // Calcula a nova data de expiração (30 dias à frente a partir de agora ou da expiração anterior)
+                const baseTime = storedExpiration > Date.now() ? storedExpiration : Date.now();
+                const targetDate = new Date(baseTime + (30 * 24 * 60 * 60 * 1000));
+                targetDate.setHours(23, 59, 59, 999);
+
                 localStorage.setItem(EXPIRATION_KEY, targetDate.getTime().toString());
                 isAppForcedBlocked = false;
-                document.getElementById('activationModal').style.display = 'none';
+                document.getElementById('activation-modal').classList.add('hidden');
                 alert("Aplicativo ativado com sucesso por mais 30 dias!");
                 checkAppAccess();
             } else {
                 alert("Código de ativação inválido. Verifique os dados informados.");
             }
         }
+
 
         function checkAccessBeforeAction() {
             const expiration = readStoredExpiration();
